@@ -29,6 +29,17 @@ test.describe('Todos app', () => {
     expect(count).toBeGreaterThanOrEqual(2);
   });
 
+  test('deletes a todo item', async ({ page }) => {
+    await page.goto('/');
+    await page.locator('#todo-input').fill('Todo to delete');
+    await page.locator('button[type="submit"]').click();
+    await expect(page.locator('#todo-list li')).toContainText('Todo to delete');
+
+    const deleteBtn = page.locator('#todo-list li').filter({ hasText: 'Todo to delete' }).locator('.delete-btn');
+    await deleteBtn.click();
+    await expect(page.locator('#todo-list li')).not.toContainText('Todo to delete');
+  });
+
   test('does not add empty todo', async ({ page }) => {
     await page.goto('/');
     const before = await page.locator('#todo-list li').count();

@@ -71,3 +71,29 @@ test('POST /api/todos with missing title returns 400', async () => {
   assert.equal(res.status, 400);
   assert.ok(res.body.error);
 });
+
+test('DELETE /api/todos/:id removes the todo', async () => {
+  const post = await request('POST', '/api/todos', { title: 'To be deleted' });
+  assert.equal(post.status, 201);
+  const { id } = post.body;
+
+  const del = await new Promise((resolve, reject) => {
+    const url = new URL(`/api/todos/${id}`, baseUrl);
+    const req = http.request({ hostname: url.hostname, port: url.port, path: url.pathname, method: 'DELETE' }, (res) => {
+      res.resume();
+      res.on('end', () => resolve({ status: res.statusCode }));
+    });
+    req.on('error', reject);
+    req.end();
+  });
+  assert.equal(del.status, 204);
+
+  const get = await request('GET', '/api/todos');
+  assert.ok(!get.body.find((t) => t.id === id), 'deleted todo should not appear in list');
+});
+
+test('DELETE /api/todos/:id with unknown id returns 404', async () => {
+  const res = await request('DELETE', '/api/todos/99999');
+  assert.equal(res.status, 404);
+  assert.ok(res.body.error);
+});

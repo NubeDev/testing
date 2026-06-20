@@ -22,12 +22,34 @@ async function loadTodos() {
     list.innerHTML = '';
     todos.forEach(({ id, title }) => {
       const li = document.createElement('li');
-      li.textContent = `#${id} — ${title}`;
+      const span = document.createElement('span');
+      span.textContent = `#${id} — ${title}`;
+      const btn = document.createElement('button');
+      btn.textContent = 'Delete';
+      btn.className = 'delete-btn';
+      btn.dataset.id = id;
+      btn.addEventListener('click', () => deleteTodo(id));
+      li.appendChild(span);
+      li.appendChild(btn);
       list.appendChild(li);
     });
     clearError();
   } catch (err) {
     showError(`Failed to load todos: ${err.message}`);
+  }
+}
+
+async function deleteTodo(id) {
+  try {
+    const res = await fetch(`${API}/${id}`, { method: 'DELETE' });
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({}));
+      throw new Error(body.error || `Server error: ${res.status}`);
+    }
+    await loadTodos();
+    clearError();
+  } catch (err) {
+    showError(`Failed to delete todo: ${err.message}`);
   }
 }
 
