@@ -2,8 +2,8 @@
   "name": "e2e-tests",
   "version": "1.0.0",
   "scripts": {
-    "test": "playwright test",
-    "install:browsers": "playwright install chromium"
+    "test": "PLAYWRIGHT_BROWSERS_PATH=0 playwright test",
+    "install:browsers": "PLAYWRIGHT_BROWSERS_PATH=0 playwright install chromium"
   },
   "devDependencies": {
     "@playwright/test": "^1.44.0"
