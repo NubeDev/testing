@@ -33,11 +33,11 @@ test.describe('Todos app', () => {
     await page.goto('/');
     await page.locator('#todo-input').fill('Todo to delete');
     await page.locator('button[type="submit"]').click();
-    await expect(page.locator('#todo-list li')).toContainText('Todo to delete');
+    await expect(page.locator('#todo-list li').filter({ hasText: 'Todo to delete' })).toBeVisible();
 
     const deleteBtn = page.locator('#todo-list li').filter({ hasText: 'Todo to delete' }).locator('.delete-btn');
     await deleteBtn.click();
-    await expect(page.locator('#todo-list li')).not.toContainText('Todo to delete');
+    await expect(page.locator('#todo-list li').filter({ hasText: 'Todo to delete' })).toHaveCount(0);
   });
 
   test('does not add empty todo', async ({ page }) => {
