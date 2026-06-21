@@ -36,5 +36,3 @@ cargo test --workspace   # run tests across the workspace
 There is no runnable binary — `testing` is a library crate (`[lib]` in
 `Cargo.toml`), so there is no `cargo run` target. The crate exists primarily so
 that `cargo test --workspace` succeeds.
-</content>
-</invoke>
