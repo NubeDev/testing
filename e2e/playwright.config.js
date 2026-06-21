@@ -3,7 +3,7 @@ const { defineConfig } = require('@playwright/test');
 module.exports = defineConfig({
   testDir: './tests',
   use: {
-    baseURL: 'http://localhost:8080',
+    baseURL: 'http://localhost:8081',
     headless: true,
   },
   webServer: [
@@ -14,8 +14,8 @@ module.exports = defineConfig({
       timeout: 10000,
     },
     {
-      command: 'node serve-frontend.js',
-      url: 'http://localhost:8080',
+      command: 'FRONTEND_PORT=8081 node serve-frontend.js',
+      url: 'http://localhost:8081',
       reuseExistingServer: !process.env.CI,
       timeout: 10000,
     },
