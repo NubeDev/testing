@@ -1,0 +1,11 @@
+{
+  "name": "e2e-tests",
+  "version": "1.0.0",
+  "scripts": {
+    "test": "playwright test",
+    "install:browsers": "playwright install chromium"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.44.0"
+  }
+}
