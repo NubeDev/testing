@@ -1,0 +1,127 @@
+const { test, before, after } = require('node:test');
+const assert = require('node:assert/strict');
+const http = require('node:http');
+const app = require('./server');
+
+let server;
+let baseUrl;
+
+before(() => new Promise((resolve) => {
+  server = http.createServer(app);
+  server.listen(0, () => {
+    baseUrl = `http://localhost:${server.address().port}`;
+    resolve();
+  });
+}));
+
+after(() => new Promise((resolve) => {
+  server.close(resolve);
+}));
+
+function request(method, path, body) {
+  return new Promise((resolve, reject) => {
+    const url = new URL(path, baseUrl);
+    const options = {
+      hostname: url.hostname,
+      port: url.port,
+      path: url.pathname,
+      method,
+      headers: { 'Content-Type': 'application/json' },
+    };
+    const req = http.request(options, (res) => {
+      let data = '';
+      res.on('data', (chunk) => { data += chunk; });
+      res.on('end', () => {
+        resolve({ status: res.statusCode, body: data ? JSON.parse(data) : null });
+      });
+    });
+    req.on('error', reject);
+    if (body !== undefined) req.write(JSON.stringify(body));
+    req.end();
+  });
+}
+
+test('GET /api/health returns { status: "ok" }', async () => {
+  const res = await request('GET', '/api/health');
+  assert.equal(res.status, 200);
+  assert.deepEqual(res.body, { status: 'ok' });
+});
+
+test('GET /api/todos returns an array', async () => {
+  const res = await request('GET', '/api/todos');
+  assert.equal(res.status, 200);
+  assert.ok(Array.isArray(res.body));
+});
+
+test('POST /api/todos creates a todo and GET returns it', async () => {
+  const post = await request('POST', '/api/todos', { title: 'Buy milk' });
+  assert.equal(post.status, 201);
+  assert.equal(post.body.title, 'Buy milk');
+  assert.ok(typeof post.body.id === 'number');
+
+  const get = await request('GET', '/api/todos');
+  assert.equal(get.status, 200);
+  const found = get.body.find((t) => t.id === post.body.id);
+  assert.ok(found, 'created todo should appear in list');
+  assert.equal(found.title, 'Buy milk');
+});
+
+test('POST /api/todos with missing title returns 400', async () => {
+  const res = await request('POST', '/api/todos', {});
+  assert.equal(res.status, 400);
+  assert.ok(res.body.error);
+});
+
+test('PUT /api/todos/:id updates the todo title', async () => {
+  const post = await request('POST', '/api/todos', { title: 'Original title' });
+  assert.equal(post.status, 201);
+  const { id } = post.body;
+
+  const put = await request('PUT', `/api/todos/${id}`, { title: 'Updated title' });
+  assert.equal(put.status, 200);
+  assert.equal(put.body.id, id);
+  assert.equal(put.body.title, 'Updated title');
+
+  const get = await request('GET', '/api/todos');
+  const found = get.body.find((t) => t.id === id);
+  assert.equal(found.title, 'Updated title');
+});
+
+test('PUT /api/todos/:id with missing title returns 400', async () => {
+  const post = await request('POST', '/api/todos', { title: 'Another todo' });
+  const res = await request('PUT', `/api/todos/${post.body.id}`, {});
+  assert.equal(res.status, 400);
+  assert.ok(res.body.error);
+});
+
+test('PUT /api/todos/:id with unknown id returns 404', async () => {
+  const res = await request('PUT', '/api/todos/99999', { title: 'Ghost' });
+  assert.equal(res.status, 404);
+  assert.ok(res.body.error);
+});
+
+test('DELETE /api/todos/:id removes the todo', async () => {
+  const post = await request('POST', '/api/todos', { title: 'To be deleted' });
+  assert.equal(post.status, 201);
+  const { id } = post.body;
+
+  const del = await new Promise((resolve, reject) => {
+    const url = new URL(`/api/todos/${id}`, baseUrl);
+    const req = http.request({ hostname: url.hostname, port: url.port, path: url.pathname, method: 'DELETE' }, (res) => {
+      res.resume();
+      res.on('end', () => resolve({ status: res.statusCode }));
+    });
+    req.on('error', reject);
+    req.end();
+  });
+  assert.equal(del.status, 204);
+
+  const get = await request('GET', '/api/todos');
+  assert.ok(!get.body.find((t) => t.id === id), 'deleted todo should not appear in list');
+});
+
+test('DELETE /api/todos/:id with unknown id returns 404', async () => {
+  const res = await request('DELETE', '/api/todos/99999');
+  assert.equal(res.status, 404);
+  assert.ok(res.body.error);
+});
