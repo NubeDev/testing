@@ -1,40 +1,31 @@
 # Project Notes
 
-## Overview
+This repository is a lazybones workflow target. It documents a small todo
+application that pairs an Express REST backend (list, create, and delete todos)
+with a minimal static frontend that consumes it, plus backend unit tests and
+Playwright end-to-end tests.
 
-This repository is described as a small todo application used as a lazybones
-workflow target. It pairs an Express backend (exposing a REST API to list,
-create, and delete todos) with a minimal static frontend that consumes it, plus
-backend unit tests and Playwright-based end-to-end tests.
+The current worktree also carries a minimal Rust crate (`testing`) so that
+`cargo test --workspace` succeeds.
 
 ## Usage
 
-> **Note:** Although the project is described above as a Node/Express todo app,
-> this worktree currently contains only a minimal Rust crate (`testing`, a
-> library — see `Cargo.toml` and `src/lib.rs`). The Node `backend/`,
-> `frontend/`, and `e2e/` sources referenced in `README.md` are not present
-> here. The commands below document what actually builds and runs in this
-> checkout.
-
-This crate is a standalone Cargo package, so build and test it with the standard
-Rust toolchain (`cargo`, installed via [rustup](https://rustup.rs)).
-
-### Build
+The only buildable artifact present in this worktree is the minimal Rust crate
+`testing` (a placeholder library defined by `Cargo.toml` and `src/lib.rs`). Build
+and test it with Cargo:
 
 ```bash
-cargo build              # build this crate
-cargo build --workspace  # build all packages in the workspace
+# Build the crate
+cargo build
+
+# Run the test suite across the workspace
+cargo test --workspace
 ```
 
-### Test
+The crate is a library placeholder with no `main`, so there is no binary to run;
+`cargo build` simply compiles the library.
 
-```bash
-cargo test               # run this crate's tests (currently 0 tests)
-cargo test --workspace   # run tests across the workspace
-```
-
-There is no runnable binary — `testing` is a library crate (`[lib]` in
-`Cargo.toml`), so there is no `cargo run` target. The crate exists primarily so
-that `cargo test --workspace` succeeds.
-</content>
-</invoke>
+> The Node todo application described above (Express backend, static frontend,
+> Playwright e2e tests) is documented in `README.md`. Those `backend/`,
+> `frontend/`, and `e2e/` directories are not present in this worktree, so the
+> `npm`/`node` commands there cannot be run here.
